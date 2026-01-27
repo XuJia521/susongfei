@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>诉讼费计算器</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="诉讼费">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3437/3437315.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+            min-height: 100vh;
+            padding: 20px 16px;
+            padding-top: calc(20px + env(safe-area-inset-top));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-label .required {
+            color: #e74c3c;
+            margin-left: 2px;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding: 12px 40px 12px 14px;
+            font-size: 0.95rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+            color: #333;
+            appearance: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+        }
+
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            color: #999;
+            pointer-events: none;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #aaa;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .checkbox-item:active {
+            background: #e8f4fc;
+        }
+
+        .checkbox-item input {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+
+        .checkbox-item span {
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .hint {
+            display: flex;
+            align-items: center;
+            margin-top: 16px;
+            padding: 10px 12px;
+            background: #fff9e6;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #996600;
+        }
+
+        .hint::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-calculate:active {
+            transform: scale(0.98);
+        }
+
+        .result-card {
+            display: none;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+
+        .result-card.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-header h2 {
+            font-size: 1rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .result-amount {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .result-row:not(:last-child) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-row .label {
+            opacity: 0.9;
+        }
+
+        .result-row .value {
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+        }
+
+        .amount-display {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #e8f4fc;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #2980b9;
+        }
+
+        .amount-display.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">⚖️</div>
+        <h1>诉讼费计算器</h1>
+        <p>民商事案件专用</p>
+    </div>
+
+    <div class="card">
+        <div class="form-group">
+            <label class="form-label">案件类型 <span class="required">*</span></label>
+            <div class="select-wrapper">
+                <select id="caseType" onchange="onCaseTypeChange()">
+                    <option value="">请选择案件类型</option>
+                    <option value="property">财产案件</option>
+                    <option value="divorce">离婚案件</option>
+                    <option value="personality">侵害人格权案件</option>
+                    <option value="ip">知识产权民事案件</option>
+                    <option value="labor">劳动争议案件</option>
+                    <option value="other">其他非财产案件</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" id="amountGroup" style="display: none;">
+            <label class="form-label" id="amountLabel">诉讼标的额（元）</label>
+            <div class="input-wrapper">
+                <input type="number" id="amount" placeholder="请输入金额" oninput="onAmountInput()">
+            </div>
+            <div class="amount-display" id="amountDisplay"></div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">特殊情况（可多选）</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="simple" onchange="calculate()">
+                    <span>适用简易程序</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="mediation" onchange="calculate()">
+                    <span>调解结案或撤诉</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="counterclaim" onchange="calculate()">
+                    <span>反诉或第三人诉讼</span>
+                </label>
+            </div>
+            <div class="hint">多个减半情况可以叠加</div>
+        </div>
+
+        <button class="btn-calculate" onclick="calculate()">
+            <span>📊</span>
+            <span>计算诉讼费</span>
+        </button>
+    </div>
+
+    <div class="card result-card" id="resultCard">
+        <div class="result-header">
+            <h2>应缴诉讼费</h2>
+            <div class="result-amount" id="finalAmount">¥0</div>
+        </div>
+        <div class="result-details">
+            <div class="result-row">
+                <span class="label">案件类型</span>
+                <span class="value" id="resultType">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">基础受理费</span>
+                <span class="value" id="resultBase">¥0</span>
+            </div>
+            <div class="result-row" id="discountRow" style="display: none;">
+                <span class="label">减免说明</span>
+                <span class="value" id="resultDiscount">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        依据《诉讼费用交纳办法》（国务院令第481号）
+    </div>
+
+    <script>
+        const caseTypeNames = {
+            'property': '财产案件',
+            'divorce': '离婚案件',
+            'personality': '侵害人格权案件',
+            'ip': '知识产权民事案件',
+            'labor': '劳动争议案件',
+            'other': '其他非财产案件'
+        };
+
+        function onCaseTypeChange() {
+            const caseType = document.getElementById('caseType').value;
+            const amountGroup = document.getElementById('amountGroup');
+            const amountLabel = document.getElementById('amountLabel');
+            const amountInput = document.getElementById('amount');
+            
+            // 根据案件类型显示/隐藏金额输入
+            if (caseType === 'labor' || caseType === 'other') {
+                amountGroup.style.display = 'none';
+                amountInput.value = '';
+            } else {
+                amountGroup.style.display = 'block';
+                
+                // 设置不同的标签文字
+                if (caseType === 'property' || caseType === 'ip') {
+                    amountLabel.textContent = '诉讼标的额（元）';
+                    amountInput.placeholder = '请输入诉讼标的金额';
+                } else if (caseType === 'divorce') {
+                    amountLabel.textContent = '涉及财产总额（元）';
+                    amountInput.placeholder = '无财产分割可填0';
+                } else if (caseType === 'personality') {
+                    amountLabel.textContent = '损害赔偿金额（元）';
+                    amountInput.placeholder = '无赔偿请求可填0';
+                }
+            }
+            
+            hideResult();
+        }
+
+        function onAmountInput() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const display = document.getElementById('amountDisplay');
+            
+            if (amount > 0) {
+                display.textContent = '金额：' + formatCurrency(amount);
+                display.classList.add('show');
+            } else {
+                display.classList.remove('show');
+            }
+        }
+
+        function formatCurrency(num) {
+            if (num >= 100000000) {
+                return (num / 100000000).toFixed(2) + '亿元';
+            } else if (num >= 10000) {
+                return (num / 10000).toFixed(2) + '万元';
+            } else {
+                return num.toFixed(2) + '元';
+            }
+        }
+
+        // 财产案件受理费计算
+        function calcPropertyFee(amount) {
+            if (amount <= 10000) {
+                return 50;
+            } else if (amount <= 100000) {
+                return amount * 0.025 - 200;
+            } else if (amount <= 200000) {
+                return amount * 0.02 + 300;
+            } else if (amount <= 500000) {
+                return amount * 0.015 + 1300;
+            } else if (amount <= 1000000) {
+                return amount * 0.01 + 3800;
+            } else if (amount <= 2000000) {
+                return amount * 0.009 + 4800;
+            } else if (amount <= 5000000) {
+                return amount * 0.008 + 6800;
+            } else if (amount <= 10000000) {
+                return amount * 0.007 + 11800;
+            } else if (amount <= 20000000) {
+                return amount * 0.006 + 21800;
+            } else {
+                return amount * 0.005 + 41800;
+            }
+        }
+
+        // 离婚案件受理费计算
+        function calcDivorceFee(propertyAmount) {
+            let baseFee = 200; // 取中间值
+            if (propertyAmount > 200000) {
+                baseFee += (propertyAmount - 200000) * 0.005;
+            }
+            return baseFee;
+        }
+
+        // 侵害人格权案件受理费计算
+        function calcPersonalityFee(damageAmount) {
+            let baseFee = 300; // 取中间值
+            if (damageAmount > 50000 && damageAmount <= 100000) {
+                baseFee += (damageAmount - 50000) * 0.01;
+            } else if (damageAmount > 100000) {
+                baseFee += 50000 * 0.01 + (damageAmount - 100000) * 0.005;
+            }
+            return baseFee;
+        }
+
+        function calculate() {
+            const caseType = document.getElementById('caseType').value;
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const isSimple = document.getElementById('simple').checked;
+            const isMediation = document.getElementById('mediation').checked;
+            const isCounterclaim = document.getElementById('counterclaim').checked;
+
+            if (!caseType) {
+                alert('请选择案件类型');
+                return;
+            }
+
+            let baseFee = 0;
+
+            // 根据案件类型计算基础费用
+            switch (caseType) {
+                case 'property':
+                    if (amount <= 0) {
+                        alert('请输入诉讼标的额');
+                        return;
+                    }
+                    baseFee = calcPropertyFee(amount);
+                    break;
+                case 'divorce':
+                    baseFee = calcDivorceFee(amount);
+                    break;
+                case 'personality':
+                    baseFee = calcPersonalityFee(amount);
+                    break;
+                case 'ip':
+                    if (amount <= 0) {
+                        baseFee = 750; // 无争议金额，取中间值
+                    } else {
+                        baseFee = calcPropertyFee(amount);
+                    }
+                    break;
+                case 'labor':
+                    baseFee = 10;
+                    break;
+                case 'other':
+                    baseFee = 75; // 取中间值
+                    break;
+            }
+
+            // 计算减免
+            let finalFee = baseFee;
+            let discountText = [];
+
+            if (isSimple) {
+                finalFee = finalFee * 0.5;
+                discountText.push('简易程序减半');
+            }
+            if (isMediation) {
+                finalFee = finalFee * 0.5;
+                discountText.push('调解/撤诉减半');
+            }
+            if (isCounterclaim) {
+                finalFee = finalFee * 0.5;
+                discountText.push('反诉减半');
+            }
+
+            // 显示结果
+            document.getElementById('resultType').textContent = caseTypeNames[caseType];
+            document.getElementById('resultBase').textContent = '¥' + Math.round(baseFee).toLocaleString();
+            document.getElementById('finalAmount').textContent = '¥' + Math.round(finalFee).toLocaleString();
+
+            const discountRow = document.getElementById('discountRow');
+            if (discountText.length > 0) {
+                discountRow.style.display = 'flex';
+                document.getElementById('resultDiscount').textContent = discountText.join('、');
+            } else {
+                discountRow.style.display = 'none';
+            }
+
+            const resultCard = document.getElementById('resultCard');
+            resultCard.classList.add('show');
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideResult() {
+            document.getElementById('resultCard').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
